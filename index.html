@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S7-1200 定时器 · 计数器 · 智能学习模型</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: linear-gradient(145deg, #f0f4f8 0%, #e6ecf3 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .model-container {
+            max-width: 1400px;
+            width: 100%;
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(2px);
+            border-radius: 3rem;
+            padding: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(0,32,64,0.3);
+        }
+        h1 {
+            font-weight: 600;
+            font-size: 2.2rem;
+            letter-spacing: -0.5px;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+            padding-left: 0.5rem;
+            border-left: 8px solid #0078d7;
+        }
+        h1 small {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #475569;
+            margin-left: 1rem;
+            background: #d9e2efb0;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+        }
+        .subtitle {
+            color: #2c3e50;
+            margin-bottom: 2.5rem;
+            font-size: 1.15rem;
+            padding-left: 1rem;
+            background: #cbd5e180;
+            border-radius: 60px;
+            display: inline-block;
+            padding: 0.5rem 2rem;
+            backdrop-filter: blur(4px);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.8rem;
+        }
+        .card {
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(255,255,255,0.6);
+            border-radius: 2.2rem;
+            padding: 1.6rem 1.4rem;
+            box-shadow: 8px 12px 24px -8px rgba(0,45,70,0.15);
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.95);
+            border-color: #b0c9e0;
+            box-shadow: 12px 20px 28px -8px #1e3f5f30;
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px dashed #a0b8d0;
+            padding-bottom: 0.8rem;
+            margin-bottom: 1.4rem;
+        }
+        .card-header h2 {
+            font-weight: 600;
+            font-size: 1.8rem;
+            color: #0b2b44;
+            letter-spacing: -0.3px;
+            background: #0078d710;
+            padding: 0.2rem 1rem 0.2rem 0.5rem;
+            border-radius: 40px;
+        }
+        .led {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #94a3b8;
+            box-shadow: inset -2px -2px 3px #00000020, 0 0 8px #94a3b8;
+            transition: 0.1s;
+        }
+        .led.on {
+            background-color: #2ac96a;
+            box-shadow: inset -2px -2px 4px #0b4f1e, 0 0 16px #37d479;
+        }
+        .io-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem 1.5rem;
+            margin: 1rem 0 1.2rem 0;
+            align-items: flex-end;
+        }
+        .input-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            min-width: 70px;
+        }
+        .input-item label {
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #2c3e50;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .input-item input[type="number"] {
+            background: white;
+            border: 2px solid #b9cedf;
+            border-radius: 40px;
+            padding: 0.4rem 0.8rem;
+            font-weight: 600;
+            color: #022b49;
+            width: 95px;
+            outline: none;
+            transition: 0.15s;
+        }
+        .input-item input[type="number"]:focus {
+            border-color: #0078d7;
+            box-shadow: 0 0 0 3px #9fc9f0;
+        }
+        .input-item input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            accent-color: #0078d7;
+            transform: scale(1);
+            border-radius: 8px;
+        }
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin: 0.8rem 0;
+        }
+        .btn {
+            background: #f8fafc;
+            border: 2px solid #9bb7d4;
+            border-radius: 40px;
+            padding: 0.45rem 1.2rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #1e3f5f;
+            cursor: pointer;
+            transition: 0.1s;
+            box-shadow: 0 4px 6px #00000010;
+            flex: 1 0 auto;
+        }
+        .btn:active {
+            background: #d1e0f0;
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+        .btn.primary {
+            background: #0078d7;
+            border-color: #005a9e;
+            color: white;
+        }
+        .value-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 0.8rem;
+            background: #eef4fa;
+            padding: 0.8rem 1.2rem;
+            border-radius: 60px;
+            font-weight: 600;
+            color: #0b2b44;
+            border: 1px solid #bed5ec;
+        }
+        .value-tag {
+            background: #2c3e50;
+            color: white;
+            padding: 0.25rem 1rem;
+            border-radius: 40px;
+            font-size: 0.85rem;
+        }
+        .badge {
+            background: #0078d7;
+            color: white;
+            border-radius: 20px;
+            padding: 0.2rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 0.5rem;
+        }
+        .footer-note {
+            margin-top: 3rem;
+            text-align: center;
+            color: #475569;
+            font-weight: 500;
+            background: #ffffffc0;
+            backdrop-filter: blur(4px);
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 0.7rem 2rem;
+            border-radius: 60px;
+            border: 1px solid white;
+        }
+        hr {
+            border: 1px solid #b0c8dd;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+<div class="model-container">
+    <h1>
+        ⚙️ S7-1200 智能体学习模型
+        <small>TON · TOF · TP · TONR · CTU · CTD · CTUD</small>
+    </h1>
+    <div class="subtitle">
+        💡 点击/开关输入 · 实时观察输出状态与累计值 · 智能时钟更新 (Δ=100ms)
+    </div>
+
+    <div class="grid" id="timerGrid">
+        <!-- ========== 定时器卡片 ========== -->
+        <!-- TON 接通延时 -->
+        <div class="card" id="card-ton">
+            <div class="card-header"><h2>TON ⏳</h2><span class="led" id="ton_led"></span></div>
+            <div class="io-group">
+                <div class="input-item"><label>IN</label><input type="checkbox" id="ton_in"></div>
+                <div class="input-item"><label>PT (s)</label><input type="number" id="ton_pt" value="5" step="0.1" min="0.1"></div>
+            </div>
+            <div class="value-row"><span>⏱️ ET</span> <strong id="ton_et">0.0</strong> s</div>
+            <div style="font-size:0.9rem; color:#2e5a88;">Q = <span id="ton_q">false</span></div>
+        </div>
+
+        <!-- TOF 断开延时 -->
+        <div class="card" id="card-tof">
+            <div class="card-header"><h2>TOF 🔻</h2><span class="led" id="tof_led"></span></div>
+            <div class="io-group">
+                <div class="input-item"><label>IN</label><input type="checkbox" id="tof_in"></div>
+                <div class="input-item"><label>PT (s)</label><input type="number" id="tof_pt" value="5" step="0.1" min="0.1"></div>
+            </div>
+            <div class="value-row"><span>⏱️ ET</span> <strong id="tof_et">0.0</strong> s</div>
+            <div style="font-size:0.9rem;">Q = <span id="tof_q">false</span></div>
+        </div>
+
+        <!-- TP 脉冲定时器 -->
+        <div class="card" id="card-tp">
+            <div class="card-header"><h2>TP ⚡</h2><span class="led" id="tp_led"></span></div>
+            <div class="io-group">
+                <div class="input-item"><label>IN</label><input type="checkbox" id="tp_in"></div>
+                <div class="input-item"><label>PT (s)</label><input type="number" id="tp_pt" value="3" step="0.1" min="0.1"></div>
+            </div>
+            <div class="value-row"><span>⏱️ ET</span> <strong id="tp_et">0.0</strong> s</div>
+            <div style="font-size:0.9rem;">Q = <span id="tp_q">false</span></div>
+        </div>
+
+        <!-- TONR 累积定时器 -->
+        <div class="card" id="card-tonr">
+            <div class="card-header"><h2>TONR 🧮</h2><span class="led" id="tonr_led"></span></div>
+            <div class="io-group">
+                <div class="input-item"><label>IN</label><input type="checkbox" id="tonr_in"></div>
+                <div class="input-item"><label>PT (s)</label><input type="number" id="tonr_pt" value="5" step="0.1" min="0.1"></div>
+            </div>
+            <div class="btn-group">
+                <button class="btn" id="tonr_reset">🔁 R 复位</button>
+            </div>
+            <div class="value-row"><span>⏱️ ET</span> <strong id="tonr_et">0.0</strong> s</div>
+            <div style="font-size:0.9rem;">Q = <span id="tonr_q">false</span></div>
+        </div>
+
+        <!-- ========== 计数器卡片 ========== -->
+        <!-- CTU 加计数器 -->
+        <div class="card" id="card-ctu">
+            <div class="card-header"><h2>CTU 🔼</h2><span class="led" id="ctu_led"></span></div>
+            <div class="io-group">
+                <div class="input-item"><label>PV</label><input type="number" id="ctu_pv" value="5" min="1" max="999" step="1"></div>
+            </div>
+            <div class="btn-group">
+                <button class="btn primary" id="ctu_cu">➕ CU</button>
+                <button class="btn" id="ctu_reset">🗑️ R</button>
+            </div>
+            <div class="value-row"><span>📊 CV</span> <strong id="ctu_cv">0</strong></div>
+            <div>QU = <span id="ctu_qu">false</span></div>
+        </div>
+
+        <!-- CTD 减计数器 -->
+        <div class="card" id="card-ctd">
+            <div class="card-header"><h2>CTD 🔽</h2><span class="led" id="ctd_led"></span></div>
+            <div class="io-group">
+                <div class="input-item"><label>PV</label><input type="number" id="ctd_pv" value="5" min="1" max="999" step="1"></div>
+            </div>
+            <div class="btn-group">
+                <button class="btn primary" id="ctd_cd">➖ CD</button>
+                <button class="btn" id="ctd_ld">📋 LD</button>
+                <button class="btn" id="ctd_reset">🗑️ R</button>
+            </div>
+            <div class="value-row"><span>📊 CV</span> <strong id="ctd_cv">0</strong></div>
+            <div>QD = <span id="ctd_qd">false</span></div>
+        </div>
+
+        <!-- CTUD 加减计数器 -->
+        <div class="card" id="card-ctud">
+            <div class="card-header"><h2>CTUD 🔄</h2><span class="led" id="ctud_led_qu"></span> <span class="led" id="ctud_led_qd" style="margin-left:-10px;"></span></div>
+            <div class="io-group">
+                <div class="input-item"><label>PV</label><input type="number" id="ctud_pv" value="5" min="1" max="999" step="1"></div>
+            </div>
+            <div class="btn-group">
+                <button class="btn" id="ctud_cu">➕ CU</button>
+                <button class="btn" id="ctud_cd">➖ CD</button>
+                <button class="btn" id="ctud_ld">📋 LD</button>
+                <button class="btn" id="ctud_reset">🗑️ R</button>
+            </div>
+            <div class="value-row"><span>📊 CV</span> <strong id="ctud_cv">0</strong></div>
+            <div style="display:flex; justify-content:space-between;">
+                <span>QU = <span id="ctud_qu">false</span></span>
+                <span>QD = <span id="ctud_qd">false</span></span>
+            </div>
+        </div>
+    </div>
+    <hr>
+    <div class="footer-note">
+        🧠 智能体时钟每100ms更新 · 操作按钮/复选框立即响应 · 模拟S7-1200扫描行为
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- 全局状态 ----------
+        // 定时器状态
+        const timers = {
+            ton: { in: false, pt: 5.0, et: 0.0, q: false, lastIn: false },
+            tof: { in: false, pt: 5.0, et: 0.0, q: false, lastIn: false, tofActive: false },
+            tp: { in: false, pt: 3.0, et: 0.0, q: false, lastIn: false, pulseActive: false },
+            tonr: { in: false, pt: 5.0, et: 0.0, q: false }
+        };
+
+        // 计数器状态
+        const counters = {
+            ctu: { cv: 0, pv: 5, qu: false },
+            ctd: { cv: 0, pv: 5, qd: false },
+            ctud: { cv: 0, pv: 5, qu: false, qd: false }
+        };
+
+        // ---------- DOM 元素绑定 ----------
+        // TON
+        const tonIn = document.getElementById('ton_in');
+        const tonPt = document.getElementById('ton_pt');
+        const tonEt = document.getElementById('ton_et');
+        const tonQLed = document.getElementById('ton_led');
+        const tonQSpan = document.getElementById('ton_q');
+
+        // TOF
+        const tofIn = document.getElementById('tof_in');
+        const tofPt = document.getElementById('tof_pt');
+        const tofEt = document.getElementById('tof_et');
+        const tofQLed = document.getElementById('tof_led');
+        const tofQSpan = document.getElementById('tof_q');
+
+        // TP
+        const tpIn = document.getElementById('tp_in');
+        const tpPt = document.getElementById('tp_pt');
+        const tpEt = document.getElementById('tp_et');
+        const tpQLed = document.getElementById('tp_led');
+        const tpQSpan = document.getElementById('tp_q');
+
+        // TONR
+        const tonrIn = document.getElementById('tonr_in');
+        const tonrPt = document.getElementById('tonr_pt');
+        const tonrEt = document.getElementById('tonr_et');
+        const tonrQLed = document.getElementById('tonr_led');
+        const tonrQSpan = document.getElementById('tonr_q');
+        const tonrResetBtn = document.getElementById('tonr_reset');
+
+        // CTU
+        const ctuPv = document.getElementById('ctu_pv');
+        const ctuCvSpan = document.getElementById('ctu_cv');
+        const ctuQuSpan = document.getElementById('ctu_qu');
+        const ctuLed = document.getElementById('ctu_led');
+        const ctuCuBtn = document.getElementById('ctu_cu');
+        const ctuResetBtn = document.getElementById('ctu_reset');
+
+        // CTD
+        const ctdPv = document.getElementById('ctd_pv');
+        const ctdCvSpan = document.getElementById('ctd_cv');
+        const ctdQdSpan = document.getElementById('ctd_qd');
+        const ctdLed = document.getElementById('ctd_led');
+        const ctdCdBtn = document.getElementById('ctd_cd');
+        const ctdLdBtn = document.getElementById('ctd_ld');
+        const ctdResetBtn = document.getElementById('ctd_reset');
+
+        // CTUD
+        const ctudPv = document.getElementById('ctud_pv');
+        const ctudCvSpan = document.getElementById('ctud_cv');
+        const ctudQuSpan = document.getElementById('ctud_qu');
+        const ctudQdSpan = document.getElementById('ctud_qd');
+        const ctudLedQu = document.getElementById('ctud_led_qu');
+        const ctudLedQd = document.getElementById('ctud_led_qd');
+        const ctudCuBtn = document.getElementById('ctud_cu');
+        const ctudCdBtn = document.getElementById('ctud_cd');
+        const ctudLdBtn = document.getElementById('ctud_ld');
+        const ctudResetBtn = document.getElementById('ctud_reset');
+
+        // ---------- 辅助函数：更新所有UI ----------
+        function renderAll() {
+            // TON
+            timers.ton.pt = parseFloat(tonPt.value) || 0.1;
+            tonEt.textContent = timers.ton.et.toFixed(1);
+            const tonQ = timers.ton.q;
+            tonQLed.className = tonQ ? 'led on' : 'led';
+            tonQSpan.textContent = tonQ ? 'true' : 'false';
+
+            // TOF
+            timers.tof.pt = parseFloat(tofPt.value) || 0.1;
+            tofEt.textContent = timers.tof.et.toFixed(1);
+            const tofQ = timers.tof.q;
+            tofQLed.className = tofQ ? 'led on' : 'led';
+            tofQSpan.textContent = tofQ ? 'true' : 'false';
+
+            // TP
+            timers.tp.pt = parseFloat(tpPt.value) || 0.1;
+            tpEt.textContent = timers.tp.et.toFixed(1);
+            const tpQ = timers.tp.q;
+            tpQLed.className = tpQ ? 'led on' : 'led';
+            tpQSpan.textContent = tpQ ? 'true' : 'false';
+
+            // TONR
+            timers.tonr.pt = parseFloat(tonrPt.value) || 0.1;
+            tonrEt.textContent = timers.tonr.et.toFixed(1);
+            const tonrQ = timers.tonr.q;
+            tonrQLed.className = tonrQ ? 'led on' : 'led';
+            tonrQSpan.textContent = tonrQ ? 'true' : 'false';
+
+            // CTU
+            counters.ctu.pv = parseInt(ctuPv.value, 10) || 1;
+            counters.ctu.qu = counters.ctu.cv >= counters.ctu.pv;
+            ctuCvSpan.textContent = counters.ctu.cv;
+            ctuQuSpan.textContent = counters.ctu.qu ? 'true' : 'false';
+            ctuLed.className = counters.ctu.qu ? 'led on' : 'led';
+
+            // CTD
+            counters.ctd.pv = parseInt(ctdPv.value, 10) || 1;
+            counters.ctd.qd = counters.ctd.cv <= 0;
+            ctdCvSpan.textContent = counters.ctd.cv;
+            ctdQdSpan.textContent = counters.ctd.qd ? 'true' : 'false';
+            ctdLed.className = counters.ctd.qd ? 'led on' : 'led';
+
+            // CTUD
+            counters.ctud.pv = parseInt(ctudPv.value, 10) || 1;
+            counters.ctud.qu = counters.ctud.cv >= counters.ctud.pv;
+            counters.ctud.qd = counters.ctud.cv <= 0;
+            ctudCvSpan.textContent = counters.ctud.cv;
+            ctudQuSpan.textContent = counters.ctud.qu ? 'true' : 'false';
+            ctudQdSpan.textContent = counters.ctud.qd ? 'true' : 'false';
+            ctudLedQu.className = counters.ctud.qu ? 'led on' : 'led';
+            ctudLedQd.className = counters.ctud.qd ? 'led on' : 'led';
+        }
+
+        // ---------- 时钟更新 (每100ms) ----------
+        function clockUpdate() {
+            // TON 更新
+            if (timers.ton.in) {
+                if (timers.ton.et < timers.ton.pt) {
+                    timers.ton.et = Math.min(timers.ton.et + 0.1, timers.ton.pt);
+                }
+                timers.ton.q = timers.ton.et >= timers.ton.pt;
+            } else {
+                timers.ton.et = 0;
+                timers.ton.q = false;
+            }
+
+            // TOF 更新 (tofActive 由事件控制)
+            if (timers.tof.in) {
+                timers.tof.et = 0;
+                timers.tof.q = true;
+                timers.tof.tofActive = false;
+            } else {
+                if (timers.tof.tofActive) {
+                    timers.tof.et = Math.min(timers.tof.et + 0.1, timers.tof.pt);
+                    if (timers.tof.et >= timers.tof.pt) {
+                        timers.tof.q = false;
+                        timers.tof.tofActive = false;
+                    } else {
+                        timers.tof.q = true;
+                    }
+                } else {
+                    timers.tof.q = false; // 非激活且in=false 则输出false
+                }
+            }
+
+            // TP 更新 (pulseActive由事件控制)
+            if (timers.tp.pulseActive) {
+                timers.tp.et = Math.min(timers.tp.et + 0.1, timers.tp.pt);
+                timers.tp.q = true;
+                if (timers.tp.et >= timers.tp.pt) {
+                    timers.tp.pulseActive = false;
+                    timers.tp.q = false;
+                    // ET 保持为PT，但下次上升沿会清零
+                }
+            } else {
+                // 如果没有脉冲，ET可以保留为PT（或0），为了直观显示我们保留PT值但q=false
+                // 但触发新脉冲时会重置为0
+                if (!timers.tp.pulseActive && timers.tp.et > 0 && !timers.tp.q) {
+                    // 保持显示PT不变
+                }
+            }
+
+            // TONR 更新
+            if (timers.tonr.in) {
+                if (timers.tonr.et < timers.tonr.pt) {
+                    timers.tonr.et = Math.min(timers.tonr.et + 0.1, timers.tonr.pt);
+                }
+                timers.tonr.q = timers.tonr.et >= timers.tonr.pt;
+            } else {
+                timers.tonr.q = timers.tonr.et >= timers.tonr.pt; // 保持输出由ET决定
+            }
+
+            renderAll();
+        }
+
+        // 启动全局时钟 (100ms)
+        setInterval(clockUpdate, 100);
+
+        // ---------- 事件绑定 ----------
+
+        // TON 输入
+        tonIn.addEventListener('change', (e) => {
+            timers.ton.in = e.target.checked;
+            timers.ton.lastIn = timers.ton.in;
+            // 为了即时性：如果IN=false，立刻清零ET和Q (时钟周期也会做，但这里更快)
+            if (!timers.ton.in) {
+                timers.ton.et = 0;
+                timers.ton.q = false;
+            }
+            renderAll();
+        });
+
+        // TOF 边沿检测 (启动tofActive)
+        tofIn.addEventListener('change', (e) => {
+            const newVal = e.target.checked;
+            const oldVal = timers.tof.lastIn;
+            timers.tof.in = newVal;
+            if (!newVal && oldVal) {  // 下降沿
+                timers.tof.tofActive = true;
+                timers.tof.et = 0;
+                timers.tof.q = true;   // 开始计时期间Q保持true
+            } else if (newVal && !oldVal) { // 上升沿：取消延时，立即Q=true et=0
+                timers.tof.tofActive = false;
+                timers.tof.et = 0;
+                timers.tof.q = true;
+            }
+            timers.tof.lastIn = newVal;
+            renderAll();
+        });
+
+        // TP 上升沿触发脉冲
+        tpIn.addEventListener('change', (e) => {
+            const newVal = e.target.checked;
+            const oldVal = timers.tp.lastIn;
+            timers.tp.in = newVal;
+            if (newVal && !oldVal) { // 上升沿
+                if (!timers.tp.pulseActive) {
+                    timers.tp.pulseActive = true;
+                    timers.tp.et = 0;
+                    timers.tp.q = true;
+                }
+            }
+            timers.tp.lastIn = newVal;
+            renderAll();
+        });
+
+        // TONR IN 和 复位
+        tonrIn.addEventListener('change', (e) => {
+            timers.tonr.in = e.target.checked;
+            // 立即更新输出 (时钟也会做)
+            timers.tonr.q = timers.tonr.et >= timers.tonr.pt;
+            renderAll();
+        });
+        tonrResetBtn.addEventListener('click', () => {
+            timers.tonr.et = 0;
+            timers.tonr.q = false;
+            renderAll();
+        });
+
+        // CTU 事件
+        ctuCuBtn.addEventListener('click', () => {
+            if (counters.ctu.cv < 999) counters.ctu.cv++;
+            renderAll();
+        });
+        ctuResetBtn.addEventListener('click', () => {
+            counters.ctu.cv = 0;
+            renderAll();
+        });
+        ctuPv.addEventListener('input', renderAll);
+
+        // CTD 事件
+        ctdCdBtn.addEventListener('click', () => {
+            if (counters.ctd.cv > 0) counters.ctd.cv--;
+            renderAll();
+        });
+        ctdLdBtn.addEventListener('click', () => {
+            counters.ctd.cv = counters.ctd.pv;
+            renderAll();
+        });
+        ctdResetBtn.addEventListener('click', () => {
+            counters.ctd.cv = 0;
+            renderAll();
+        });
+        ctdPv.addEventListener('input', renderAll);
+
+        // CTUD 事件
+        ctudCuBtn.addEventListener('click', () => {
+            if (counters.ctud.cv < 999) counters.ctud.cv++;
+            renderAll();
+        });
+        ctudCdBtn.addEventListener('click', () => {
+            if (counters.ctud.cv > 0) counters.ctud.cv--;
+            renderAll();
+        });
+        ctudLdBtn.addEventListener('click', () => {
+            counters.ctud.cv = counters.ctud.pv;
+            renderAll();
+        });
+        ctudResetBtn.addEventListener('click', () => {
+            counters.ctud.cv = 0;
+            renderAll();
+        });
+        ctudPv.addEventListener('input', renderAll);
+
+        // PT 输入实时同步到状态（但实际已经在render中从DOM读取）
+        // 监听所有PT改变，重新渲染 (保证模型内pt最新)
+        [tonPt, tofPt, tpPt, tonrPt].forEach(input => {
+            input.addEventListener('input', () => {
+                // 直接触发render, 对应定时器pt在render里更新
+                renderAll();
+            });
+        });
+
+        // 初始化 lastIn
+        timers.ton.lastIn = false;
+        timers.tof.lastIn = false;
+        timers.tp.lastIn = false;
+
+        // 初始渲染
+        renderAll();
+
+        // 额外：确保复选框状态与模型同步
+        tonIn.checked = timers.ton.in;
+        tofIn.checked = timers.tof.in;
+        tpIn.checked = timers.tp.in;
+        tonrIn.checked = timers.tonr.in;
+    })();
+</script>
+</body>
+</html>
